@@ -60,38 +60,10 @@ class MainActivity : ComponentActivity() {
                         Text("\n\nUsage Access permission not granted.")
                     }
 
+                    guiMain(truescreenTime!!)
 
                 }
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        buildAnnotatedString {
 
-                            append("Points: ")
-
-                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red)) {
-                                val points = 24 - truescreenTime!!
-                                append("${points}")
-                            }
-                            append(" / 24")
-
-                            append("\nWhich is ")
-                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red)) {
-                                append("${truescreenTime}")
-                            }
-                            append(" hours of screentime today.")
-
-                            if (truescreenTime!! < 4) {
-                                append("\nGood job in not going over 4 hours of screentime today!")
-
-                            }
-
-                        }
-                    )
-                }
             }
         }
     }
@@ -111,16 +83,41 @@ fun getTotalScreentime(context: Context): Long {
         ?.sumOf { it.totalTimeInForeground } ?: 0L
 }
 
-@Preview(name = "Light Mode")
-@Preview(
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    showBackground = true,
-    name = "Dark Mode"
-)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, showBackground = true, name = "Light Mode")
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true, name = "Dark Mode")
 @Composable
-fun guiMain() {
+fun guiMain(sts: Long = 0) {
 
+    Box(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            buildAnnotatedString {
 
+                append("Points: ")
+
+                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red)) {
+                    val points = 24 - sts
+                    append("${points}")
+                }
+                append(" / 24")
+
+                append("\nWhich is ")
+                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red)) {
+                    append("${sts}")
+                }
+                append(" hours of screentime today.")
+
+                if (sts < 4) {
+                    append("\nGood job in not going over ${sts + 1} hours of screentime today!")
+
+                }
+
+            }
+        )
+    }
 
 }
 
