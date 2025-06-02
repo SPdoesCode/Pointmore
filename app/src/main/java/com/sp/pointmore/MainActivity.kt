@@ -1,37 +1,46 @@
 package com.sp.pointmore
 
 import android.app.AppOpsManager
+import android.app.usage.UsageEvents
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.sp.pointmore.ui.theme.PointmoreTheme
-import android.app.usage.UsageStatsManager.*
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import java.util.Calendar
-import androidx.compose.runtime.*
 import android.provider.Settings
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.ui.unit.dp
 
-val debug: Int = 1 //turn off if ur not gona need debuging
-var errornum: Long = -2
+const val debug: Int = 1 //turn off if ur not gona need debuging
+const val errornum: Long = -2
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,15 +51,22 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PointmoreTheme {
+                val context = LocalContext.current
                 var screenTime by remember { mutableStateOf<Long?>(-2) }
 
                 LaunchedEffect(Unit) {
-                    if (hasUsageStatsPermission(this@MainActivity)) {
-                        screenTime = getTotalScreentime(this@MainActivity)
+                    if (hasUsageStatsPermission(context)) {
+                        screenTime = getTotalScreentime(context)
                     }
                 }
                 var truescreenTime by remember { mutableStateOf<Long?>(-2) }
-                Column {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                ) {
                     if (screenTime != errornum && debug == 1) {
                         Text("\nDebug Stats:")
                         Text("\ntotalScreenUsage: ${screenTime!! / (1000 * 60 * 60)} hours")
@@ -76,49 +92,66 @@ fun getTotalScreentime(context: Context): Long {
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
     }.timeInMillis
 
-    return usageStatsManager
-        .queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfDay, now)
-        ?.sumOf { it.totalTimeInForeground } ?: 0L
-}
+    val events = usageStatsManager.queryEvents(startOfDay, now)
+    var lastForegroundTimestamp: Long? = null
+    var totalTime = 0L
 
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, showBackground = true, name = "Light Mode")
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true, name = "Dark Mode")
-@Composable
-fun guiMain(sts: Long = 0) {
+    val event = UsageEvents.Event()
+    while (events.hasNextEvent()) {
+        events.getNextEvent(event)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            buildAnnotatedString {
-
-                append("Points: ")
-
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red)) {
-                    val points = 24 - sts
-                    append("${points}")
-                }
-                append(" / 24")
-
-                append("\nWhich is ")
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red)) {
-                    append("${sts}")
-                }
-                append(" hours of screentime today.")
-
-                if (sts < 4) {
-                    append("\nGood job in not going over ${sts + 1} hours of screentime today!")
-
-                }
-
-            }
-        )
+        if (event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+            lastForegroundTimestamp = event.timeStamp
+        } else if (event.eventType == UsageEvents.Event.MOVE_TO_BACKGROUND && lastForegroundTimestamp != null) {
+            totalTime += event.timeStamp - lastForegroundTimestamp!!
+            lastForegroundTimestamp = null
+        }
     }
 
+    return totalTime
+}
+
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true, name = "Dark Mode", showSystemUi = true)
+@Composable
+fun guiMain(sts: Long = 0) {
+    PointmoreTheme(
+        darkTheme = true
+    ) {
+        Box(
+            modifier = Modifier.background(MaterialTheme.colorScheme.background) // if i dont got ts set here then well it doesnt work idky
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text( color = MaterialTheme.colorScheme.primary,
+                text = buildAnnotatedString {
+
+                    append("Points: ")
+
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red)) {
+                        val points = 24 - sts
+                        append("${points}")
+                    }
+                    append(" / 24")
+
+                    append("\nWhich is ")
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red)) {
+                        append("${sts}")
+                    }
+                    append(" hours of screentime today.")
+
+                    if (sts < 4) {
+                        append("\nGood job in not going over ${sts + 1} hours of screentime today!")
+
+                    }
+
+                }
+            )
+        }
+    }
 }
 
 fun hasUsageStatsPermission(context: Context): Boolean {
