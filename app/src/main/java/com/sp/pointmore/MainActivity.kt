@@ -37,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.ui.text.font.FontVariation.width
 import androidx.compose.ui.unit.dp
 
 const val debug: Int = 1 //turn off if ur not gona need debuging
@@ -121,35 +122,80 @@ fun guiMain(sts: Long = 0) {
     PointmoreTheme(
         darkTheme = true
     ) {
-        Box(
-            modifier = Modifier.background(MaterialTheme.colorScheme.background) // if i dont got ts set here then well it doesnt work idky
+        Box (
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.background)
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
+
         ) {
-            Text( color = MaterialTheme.colorScheme.primary,
-                text = buildAnnotatedString {
+            Card(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(34.dp)
+                    .size(width = 240.dp, height = 100.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+            ) {
+                Text(
+                    modifier = Modifier.padding(16.dp),
+                    text = buildAnnotatedString {
 
-                    append("Points: ")
-
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red)) {
+                        append("Points: ")
                         val points = 24 - sts
-                        append("${points}")
+
+                        if (sts >= 4) {
+                            withStyle(
+                                style = SpanStyle(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Red
+                                )
+                            ) {
+                                append("${points}")
+                            }
+                        } else {
+                            withStyle(
+                                style = SpanStyle(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Green
+                                )
+                            ) {
+                                append("${points}")
+                            }
+                        }
+                        append(" / 24")
+
+                        append("\nWhich is ")
+                        if (sts >= 4) {
+                            withStyle(
+                                style = SpanStyle(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Red
+                                )
+                            ) {
+                                append("${sts}")
+                            }
+                        } else {
+                            withStyle(
+                                style = SpanStyle(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Green
+                                )
+                            ) {
+                                append("${sts}")
+                            }
+                        }
+                        append(" hours of screentime today.")
+
+                        if (sts < 4) {
+                            append("\nGood job in not going over ${sts + 1} hours of screentime today!")
+
+                        }
+
                     }
-                    append(" / 24")
-
-                    append("\nWhich is ")
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.Red)) {
-                        append("${sts}")
-                    }
-                    append(" hours of screentime today.")
-
-                    if (sts < 4) {
-                        append("\nGood job in not going over ${sts + 1} hours of screentime today!")
-
-                    }
-
-                }
-            )
+                )
+            }
         }
     }
 }
