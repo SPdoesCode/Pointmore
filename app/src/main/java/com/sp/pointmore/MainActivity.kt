@@ -40,7 +40,7 @@ import androidx.compose.material3.*
 import androidx.compose.ui.text.font.FontVariation.width
 import androidx.compose.ui.unit.dp
 
-const val debug: Int = 1 //turn off if ur not gona need debuging
+const val debug: Int = 0 //turn off if ur not gona need debuging
 const val errornum: Long = -2
 
 class MainActivity : ComponentActivity() {
@@ -119,23 +119,24 @@ fun getTotalScreentime(context: Context): Long {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true, name = "Dark Mode", showSystemUi = true)
 @Composable
 fun guiMain(sts: Long = 0) {
+    val points = (24 * 5) - (sts * 3) + sts //not sure how i feel abt this new point way, most likely will change
     PointmoreTheme(
         darkTheme = true
     ) {
         Box (
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.background)
+                .background(MaterialTheme.colorScheme.onSecondary)
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
 
         ) {
             Card(
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background)
+                    .background(MaterialTheme.colorScheme.onSecondary)
                     .padding(34.dp)
                     .size(width = 240.dp, height = 100.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
                 )
             ) {
                 Text(
@@ -143,7 +144,6 @@ fun guiMain(sts: Long = 0) {
                     text = buildAnnotatedString {
 
                         append("Points: ")
-                        val points = 24 - sts
 
                         if (sts >= 4) {
                             withStyle(
@@ -164,7 +164,7 @@ fun guiMain(sts: Long = 0) {
                                 append("${points}")
                             }
                         }
-                        append(" / 24")
+                        append(" / 120")
 
                         append("\nWhich is ")
                         if (sts >= 4) {
