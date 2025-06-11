@@ -38,7 +38,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.ui.unit.dp
 
-const val debug: Int = 1 //turn off if ur not gona need debuging
+const val debug: Int = 0 //turn off if ur not gona need debuging
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
