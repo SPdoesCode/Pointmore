@@ -32,16 +32,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.ui.text.font.FontVariation.width
 import androidx.compose.ui.unit.dp
 
-const val debug: Int = 0 //turn off if ur not gona need debuging
-const val errornum: Long = -2
+const val debug: Int = 1 //turn off if ur not gona need debuging
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,31 +50,32 @@ class MainActivity : ComponentActivity() {
         setContent {
             PointmoreTheme {
                 val context = LocalContext.current
-                var screenTime by remember { mutableStateOf<Long?>(-2) }
+                var screenTime by remember { mutableStateOf(22222222222222222)}
 
                 LaunchedEffect(Unit) {
                     if (hasUsageStatsPermission(context)) {
-                        screenTime = getTotalScreentime(context)
+                        screenTime = getTotalScreenTime(context)
                     }
                 }
-                var truescreenTime by remember { mutableStateOf<Long?>(-2) }
+                val truescreenTime = (screenTime) / (1000 * 60 * 60)
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
+                        .background(MaterialTheme.colorScheme.onSecondary)
                         .padding(16.dp),
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    if (screenTime != errornum && debug == 1) {
+                    if (debug == 1) {
                         Text("\nDebug Stats:")
-                        Text("\ntotalScreenUsage: ${screenTime!! / (1000 * 60 * 60)} hours")
-                        truescreenTime = screenTime!! / (1000 * 60 * 60)
-                        Text("\ntotaltrueScreenUsage: ${truescreenTime} hours")
-                    } else if (!hasUsageStatsPermission(this@MainActivity)) {
+                        Text("\nVal of screenTime: ${screenTime}")
+                        Text("\ntotalScreenUsage: ${screenTime!!} ")
+                        Text("\ntotaltrueScreenUsage: $truescreenTime hours")
+                        Text("\nval of truescreentime: ${truescreenTime}")
+                    } else if (!hasUsageStatsPermission(context)) {
                         Text("\n\nUsage Access permission not granted.")
                     }
 
-                    guiMain(truescreenTime!!)
+                    guiMain(truescreenTime)
 
                 }
 
@@ -86,8 +84,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-fun getTotalScreentime(context: Context): Long {
+fun getTotalScreenTime(context: Context): Long {
     val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+
     val now = System.currentTimeMillis()
     val startOfDay = Calendar.getInstance().apply {
         set(Calendar.HOUR_OF_DAY, 0)
@@ -96,30 +95,29 @@ fun getTotalScreentime(context: Context): Long {
         set(Calendar.MILLISECOND, 0)
     }.timeInMillis
 
-    val events = usageStatsManager.queryEvents(startOfDay, now)
-    var lastForegroundTimestamp: Long? = null
+    val stats = usageStatsManager.queryUsageStats(
+        UsageStatsManager.INTERVAL_DAILY,
+        startOfDay,
+        now
+    )
+
     var totalTime = 0L
-
-    val event = UsageEvents.Event()
-    while (events.hasNextEvent()) {
-        events.getNextEvent(event)
-
-        if (event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND) {
-            lastForegroundTimestamp = event.timeStamp
-        } else if (event.eventType == UsageEvents.Event.MOVE_TO_BACKGROUND && lastForegroundTimestamp != null) {
-            totalTime += event.timeStamp - lastForegroundTimestamp!!
-            lastForegroundTimestamp = null
-        }
+    for (usageStat in stats) {
+        totalTime += usageStat.totalTimeInForeground
     }
 
     return totalTime
 }
 
 
+
+
+
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true, name = "Dark Mode", showSystemUi = true)
 @Composable
 fun guiMain(sts: Long = 0) {
-    val points = (24 * 5) - (sts * 3) + sts //not sure how i feel abt this new point way, most likely will change
+    val maxPoints = 24
+    val points = maxPoints + (sts * 3) % maxPoints / 2 - 12 //not sure how i feel abt this new point way, most likely will change
     PointmoreTheme(
         darkTheme = true
     ) {
@@ -164,7 +162,7 @@ fun guiMain(sts: Long = 0) {
                                 append("${points}")
                             }
                         }
-                        append(" / 120")
+                        append(" / ${maxPoints}")
 
                         append("\nWhich is ")
                         if (sts >= 4) {
