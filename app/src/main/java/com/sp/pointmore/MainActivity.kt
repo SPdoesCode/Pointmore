@@ -1,7 +1,8 @@
+@file:Suppress("DEPRECATION")
+
 package com.sp.pointmore
 
 import android.app.AppOpsManager
-import android.app.usage.UsageEvents
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,7 +29,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -36,9 +36,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.ui.unit.dp
 
-const val debug: Int = 0 //turn off if ur not gona need debuging
+const val debug: Boolean = false
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,7 +51,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             PointmoreTheme {
                 val context = LocalContext.current
-                var screenTime by remember { mutableStateOf(22222222222222222)}
+                var screenTime by remember { mutableLongStateOf(2222222222222222222)}
 
                 LaunchedEffect(Unit) {
                     if (hasUsageStatsPermission(context)) {
@@ -65,17 +66,15 @@ class MainActivity : ComponentActivity() {
                         .padding(16.dp),
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    if (debug == 1) {
+                    if (debug) {
                         Text("\nDebug Stats:")
-                        Text("\nVal of screenTime: ${screenTime}")
-                        Text("\ntotalScreenUsage: ${screenTime!!} ")
-                        Text("\ntotaltrueScreenUsage: $truescreenTime hours")
-                        Text("\nval of truescreentime: ${truescreenTime}")
+                        Text("\nVal of screenTime: $screenTime}")
+                        Text("\nval of truescreentime: $truescreenTime")
                     } else if (!hasUsageStatsPermission(context)) {
                         Text("\n\nUsage Access permission not granted.")
                     }
 
-                    guiMain(truescreenTime)
+                    GuiMain(truescreenTime)
 
                 }
 
@@ -109,15 +108,11 @@ fun getTotalScreenTime(context: Context): Long {
     return totalTime
 }
 
-
-
-
-
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true, name = "Dark Mode", showSystemUi = true)
 @Composable
-fun guiMain(sts: Long = 0) {
+fun GuiMain(sts: Long = 0) {
     val maxPoints = 24
-    val points = maxPoints + (sts * 3) % maxPoints / 2 - 12 //not sure how i feel abt this new point way, most likely will change
+    val points = maxPoints - sts
     PointmoreTheme(
         darkTheme = true
     ) {
@@ -132,7 +127,7 @@ fun guiMain(sts: Long = 0) {
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.onSecondary)
                     .padding(34.dp)
-                    .size(width = 240.dp, height = 100.dp),
+                    .size(width = 240.dp, height = 102.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                 )
@@ -150,7 +145,7 @@ fun guiMain(sts: Long = 0) {
                                     color = Color.Red
                                 )
                             ) {
-                                append("${points}")
+                                append("$points")
                             }
                         } else {
                             withStyle(
@@ -159,10 +154,10 @@ fun guiMain(sts: Long = 0) {
                                     color = Color.Green
                                 )
                             ) {
-                                append("${points}")
+                                append("$points")
                             }
                         }
-                        append(" / ${maxPoints}")
+                        append(" / $maxPoints")
 
                         append("\nWhich is ")
                         if (sts >= 4) {
@@ -172,7 +167,7 @@ fun guiMain(sts: Long = 0) {
                                     color = Color.Red
                                 )
                             ) {
-                                append("${sts}")
+                                append("$sts")
                             }
                         } else {
                             withStyle(
@@ -181,10 +176,10 @@ fun guiMain(sts: Long = 0) {
                                     color = Color.Green
                                 )
                             ) {
-                                append("${sts}")
+                                append("$sts")
                             }
                         }
-                        append(" hours of screentime today.")
+                        append(" hours of screentime today.\n(Only counts time out of the ap!)")
 
                         if (sts < 4) {
                             append("\nGood job in not going over ${sts + 1} hours of screentime today!")
